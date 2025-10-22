@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Booking System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .filter-item select,
+        .filter-item input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .cars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .car-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .car-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .car-card.booked {
+            background: #f8f9fa;
+            border: 2px solid #ffc107;
+        }
+
+        .car-type {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .car-type.SEDAN {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .car-type.SUV {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .car-type.VAN {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .car-reg {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .car-details {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .car-details p {
+            margin: 5px 0;
+        }
+
+        .car-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .book-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .book-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🚗 Car Booking System</h1>
+            <div class="user-info">
+                <span sec:authentication="name">User</span>
+                <span sec:authorize="hasAuthority('ROLE_ADMIN')" style="margin-left: 10px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 3px; font-size: 12px;">ADMIN</span>
+                <a sec:authorize="hasAuthority('ROLE_ADMIN')" href="/admin/cars" style="color: white; text-decoration: none; margin-left: 15px; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 5px;">Manage Cars</a>
+                <form th:action="@{/logout}" method="post" style="display: inline;" onsubmit="handleLogout()">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="alertContainer"></div>
+
+        <div class="filters">
+            <p style="margin-bottom: 15px; color: #667eea; font-weight: 500;">
+                ℹ️ Search for available cars by date. Cars with overlapping bookings will be marked as BOOKED.
+            </p>
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label for="carTypeFilter">Car Type</label>
+                    <select id="carTypeFilter" onchange="filterCars()">
+                        <option value="">All Types</option>
+                        <option value="SEDAN">Sedan</option>
+                        <option value="SUV">SUV</option>
+                        <option value="VAN">Van</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="startDate">Start Date <span style="color: red;">*</span></label>
+                    <input type="datetime-local" id="startDate" required onchange="filterCars()">
+                </div>
+                <div class="filter-item">
+                    <label for="duration">Duration (days) <span style="color: red;">*</span></label>
+                    <input type="number" id="duration" min="1" value="1" required onchange="filterCars()">
+                </div>
+                <div class="filter-item">
+                    <button class="btn btn-primary" onclick="filterCars()">Search Cars</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="carsContainer" class="cars-grid">
+            <div class="loading">Loading cars...</div>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Book Car</h2>
+            <form id="bookingForm" onsubmit="submitBooking(event)">
+                <input type="hidden" id="bookingCarId">
+                <div class="form-group">
+                    <label>Car:</label>
+                    <p id="bookingCarInfo" style="font-weight: 600; color: #667eea;"></p>
+                </div>
+                <div class="form-group">
+                    <label for="bookingDate">Booking Date</label>
+                    <input type="datetime-local" id="bookingDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookingDuration">Duration (days)</label>
+                    <input type="number" id="bookingDuration" min="1" value="1" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Confirm Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allCars = [];
+        let currentUser = null;
+
+        // Load cars on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load user info and store in localStorage
+            loadUserInfo().then(() => {
+                // Set default start date to today
+                const today = new Date();
+                today.setHours(10, 0, 0, 0);
+                document.getElementById('startDate').value = formatDateTimeLocal(today);
+                document.getElementById('bookingDate').value = formatDateTimeLocal(today);
+
+                // Load cars with default date and duration
+                loadCars();
+            });
+        });
+
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        async function loadUserInfo() {
+            try {
+                // Check if user info is already in localStorage
+                const storedUser = localStorage.getItem('currentUser');
+                if (storedUser) {
+                    currentUser = JSON.parse(storedUser);
+                    return;
+                }
+
+                // Fetch user info from server
+                const response = await fetch('/api/user/me');
+                if (response.ok) {
+                    currentUser = await response.json();
+                    // Store in localStorage
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        function isAdmin() {
+            return currentUser && currentUser.roles && currentUser.roles.includes('ROLE_ADMIN');
+        }
+
+        function getCurrentUserId() {
+            return currentUser ? currentUser.id : null;
+        }
+
+        function handleLogout() {
+            // Clear localStorage on logout
+            localStorage.removeItem('currentUser');
+        }
+
+        function loadCars() {
+            filterCars(); // Use filterCars to load with date parameters
+        }
+
+        function filterCars() {
+            const type = document.getElementById('carTypeFilter').value;
+            const startDate = document.getElementById('startDate').value;
+            const duration = document.getElementById('duration').value;
+
+            // Validate required fields
+            if (!startDate || !duration) {
+                showAlert('Please select start date and duration', 'error');
+                return;
+            }
+
+            // Convert datetime-local to ISO format for API
+            const startDateTime = new Date(startDate).toISOString();
+
+            let url = `/api/cars?startDate=${encodeURIComponent(startDateTime)}&duration=${duration}`;
+            if (type) {
+                url += `&type=${type}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(cars => {
+                    allCars = cars;
+                    displayCars(cars);
+                })
+                .catch(error => {
+                    console.error('Error filtering cars:', error);
+                    showAlert('Error filtering cars', 'error');
+                });
+        }
+
+        function displayCars(cars) {
+            const container = document.getElementById('carsContainer');
+
+            if (cars.length === 0) {
+                container.innerHTML = '<div class="loading">No cars available</div>';
+                return;
+            }
+
+            const userId = getCurrentUserId();
+
+            container.innerHTML = cars.map(car => {
+                let buttonHtml = '';
+                let bookingInfo = '';
+
+                if (car.isBooked) {
+                    // Car is booked - show booking info
+                    const isMyBooking = currentUser && car.bookedByUserId === userId;
+                    const canCancel = isMyBooking || isAdmin();
+
+                    bookingInfo = `
+                        <div style="background: #fff3cd; padding: 8px; border-radius: 5px; margin: 10px 0; font-size: 12px;">
+                            <strong>Booked by:</strong> ${isMyBooking ? 'You' : car.bookedByUsername}<br>
+                            <strong>From:</strong> ${car.bookingStartDate}<br>
+                            <strong>To:</strong> ${car.bookingEndDate}
+                        </div>
+                    `;
+
+                    if (canCancel) {
+                        buttonHtml = `
+                            <button class="book-btn" style="background: #dc3545;" onclick="cancelBooking(${car.currentBookingId})">
+                                Cancel Booking
+                            </button>
+                        `;
+                    }
+                } else {
+                    // Available car - show book button
+                    buttonHtml = `
+                        <button class="book-btn" onclick="openBookingModal(${car.id}, '${car.registrationNumber}', '${car.type}')">
+                            Book Now
+                        </button>
+                    `;
+                }
+
+                return `
+                    <div class="car-card ${car.isBooked ? 'booked' : ''}">
+                        <span class="car-type ${car.type}">${car.type}</span>
+                        ${car.isBooked ? '<span style="position: absolute; top: 10px; right: 10px; background: #ffc107; color: #000; padding: 4px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">BOOKED</span>' : ''}
+                        <div class="car-reg">${car.registrationNumber}</div>
+                        <div class="car-details">
+                            <p>👥 Capacity: ${car.capacity} persons</p>
+                        </div>
+                        ${bookingInfo}
+                        <div class="car-price">$${car.costPerDay}/day</div>
+                        ${buttonHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+
+        function openBookingModal(carId, regNumber, type) {
+            document.getElementById('bookingCarId').value = carId;
+            document.getElementById('bookingCarInfo').textContent = `${regNumber} (${type})`;
+
+            // Set booking date from filter if available
+            const filterDate = document.getElementById('startDate').value;
+            if (filterDate) {
+                document.getElementById('bookingDate').value = filterDate;
+            }
+
+            // Set duration from filter if available
+            const filterDuration = document.getElementById('duration').value;
+            if (filterDuration) {
+                document.getElementById('bookingDuration').value = filterDuration;
+            }
+
+            document.getElementById('bookingModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('bookingModal').style.display = 'none';
+        }
+
+        function submitBooking(event) {
+            event.preventDefault();
+
+            const carId = document.getElementById('bookingCarId').value;
+            const bookingDate = document.getElementById('bookingDate').value;
+            const duration = document.getElementById('bookingDuration').value;
+
+            const bookingData = {
+                carId: parseInt(carId),
+                bookingDate: bookingDate,
+                duration: parseInt(duration)
+            };
+
+            fetch('/api/bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bookingData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                showAlert('Booking created successfully!', 'success');
+                closeModal();
+                loadCars(); // Refresh the car list
+            })
+            .catch(error => {
+                console.error('Error creating booking:', error);
+                showAlert(error.message || 'Error creating booking. The car may not be available for the selected dates.', 'error');
+            });
+        }
+
+
+
+        function cancelBooking(bookingId) {
+            if (!confirm('Are you sure you want to cancel this booking?')) {
+                return;
+            }
+
+            fetch(`/api/bookings/${bookingId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to cancel booking');
+                }
+                showAlert('Booking cancelled successfully!', 'success');
+                loadCars(); // Refresh the car list
+            })
+            .catch(error => {
+                console.error('Error cancelling booking:', error);
+                showAlert('Error cancelling booking', 'error');
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('bookingModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

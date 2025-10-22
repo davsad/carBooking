@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Manage Cars</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logout-btn, .nav-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover, .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-sedan {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge-suv {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .badge-van {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .badge-booked {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🚗 Admin - Manage Cars</h1>
+            <div class="user-info">
+                <span sec:authentication="name">Admin</span>
+                <a href="/" class="nav-btn">Back to Bookings</a>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="alertContainer"></div>
+
+        <!-- Add New Car Section -->
+        <div class="section">
+            <h2>Add New Car</h2>
+            <form id="addCarForm" onsubmit="addCar(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="registrationNumber">Registration Number *</label>
+                        <input type="text" id="registrationNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="carType">Car Type *</label>
+                        <select id="carType" required>
+                            <option value="">Select Type</option>
+                            <option value="SEDAN">Sedan</option>
+                            <option value="SUV">SUV</option>
+                            <option value="VAN">Van</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacity">Capacity *</label>
+                        <input type="number" id="capacity" min="1" max="20" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="costPerDay">Cost Per Day ($) *</label>
+                        <input type="number" id="costPerDay" min="0" step="0.01" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Car</button>
+            </form>
+        </div>
+
+        <!-- Cars List Section -->
+        <div class="section">
+            <h2>All Cars</h2>
+            <div class="form-row" style="margin-bottom: 20px;">
+                <div class="form-group">
+                    <label for="carTypeFilter">Filter by Type</label>
+                    <select id="carTypeFilter" onchange="loadCars()">
+                        <option value="">All Types</option>
+                        <option value="SEDAN">Sedan</option>
+                        <option value="SUV">SUV</option>
+                        <option value="VAN">Van</option>
+                    </select>
+                </div>
+            </div>
+            <div id="carsTableContainer">
+                <div class="loading">Loading cars...</div>
+            </div>
+        </div>
+
+        <!-- All Bookings Section -->
+        <div class="section">
+            <h2>All Bookings</h2>
+            <div class="form-row" style="margin-bottom: 20px;">
+                <div class="form-group">
+                    <label for="bookingStartDate">Start Date</label>
+                    <input type="datetime-local" id="bookingStartDate" onchange="loadBookings()">
+                </div>
+                <div class="form-group">
+                    <label for="bookingEndDate">End Date</label>
+                    <input type="datetime-local" id="bookingEndDate" onchange="loadBookings()">
+                </div>
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button class="btn btn-primary" onclick="loadBookings()" style="width: 100%;">Search Bookings</button>
+                </div>
+            </div>
+            <div id="bookingsTableContainer">
+                <div class="loading">Loading bookings...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load cars and bookings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCars();
+            loadBookings();
+        });
+
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        function loadCars() {
+            const type = document.getElementById('carTypeFilter').value;
+
+            let url = '/api/cars/simple';
+            if (type) {
+                url += `?type=${type}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(cars => {
+                    displayCars(cars);
+                })
+                .catch(error => {
+                    console.error('Error loading cars:', error);
+                    showAlert('Error loading cars', 'error');
+                });
+        }
+
+        function loadBookings() {
+            const startDate = document.getElementById('bookingStartDate').value;
+            const endDate = document.getElementById('bookingEndDate').value;
+
+            let url = '/api/bookings';
+
+            // Add date range parameters if both are provided
+            if (startDate && endDate) {
+                const startDateTime = new Date(startDate).toISOString();
+                const endDateTime = new Date(endDate).toISOString();
+                url += `?startDate=${encodeURIComponent(startDateTime)}&endDate=${encodeURIComponent(endDateTime)}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(bookings => {
+                    displayBookings(bookings);
+                })
+                .catch(error => {
+                    console.error('Error loading bookings:', error);
+                    showAlert('Error loading bookings', 'error');
+                });
+        }
+
+        function displayCars(cars) {
+            const container = document.getElementById('carsTableContainer');
+
+            if (cars.length === 0) {
+                container.innerHTML = '<div class="loading">No cars found</div>';
+                return;
+            }
+
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Registration</th>
+                            <th>Type</th>
+                            <th>Capacity</th>
+                            <th>Cost/Day</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            cars.forEach(car => {
+                const typeClass = car.type.toLowerCase();
+
+                tableHtml += `
+                    <tr>
+                        <td>${car.id}</td>
+                        <td><strong>${car.registrationNumber}</strong></td>
+                        <td><span class="badge badge-${typeClass}">${car.type}</span></td>
+                        <td>${car.capacity} persons</td>
+                        <td>$${car.costPerDay}</td>
+                        <td><button class="btn btn-danger" onclick="deleteCar(${car.id}, '${car.registrationNumber}')">Delete Car</button></td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHtml;
+        }
+
+        function displayBookings(bookings) {
+            const container = document.getElementById('bookingsTableContainer');
+
+            if (bookings.length === 0) {
+                container.innerHTML = '<div class="loading">No bookings found</div>';
+                return;
+            }
+
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Car ID</th>
+                            <th>Registration</th>
+                            <th>User</th>
+                            <th>Start Date</th>
+                            <th>Duration</th>
+                            <th>End Date</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            bookings.forEach(booking => {
+                const startDate = new Date(booking.bookingDate);
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + booking.duration);
+
+                tableHtml += `
+                    <tr>
+                        <td>${booking.id}</td>
+                        <td>${booking.carId}</td>
+                        <td><strong>${booking.carRegistrationNumber}</strong></td>
+                        <td>${booking.username}</td>
+                        <td>${formatDateTime(booking.bookingDate)}</td>
+                        <td>${booking.duration} day(s)</td>
+                        <td>${formatDateTime(endDate.toISOString())}</td>
+                        <td>${formatDateTime(booking.createdAt)}</td>
+                        <td><button class="btn btn-danger" onclick="cancelBooking(${booking.id})">Cancel</button></td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHtml;
+        }
+
+        function formatDateTime(dateTimeStr) {
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function addCar(event) {
+            event.preventDefault();
+
+            const carData = {
+                registrationNumber: document.getElementById('registrationNumber').value,
+                type: document.getElementById('carType').value,
+                capacity: parseInt(document.getElementById('capacity').value),
+                costPerDay: parseFloat(document.getElementById('costPerDay').value)
+            };
+
+            fetch('/api/cars', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(carData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                showAlert('Car added successfully!', 'success');
+                document.getElementById('addCarForm').reset();
+                loadCars(); // Refresh the car list
+            })
+            .catch(error => {
+                console.error('Error adding car:', error);
+                showAlert(error.message || 'Error adding car', 'error');
+            });
+        }
+
+        function deleteCar(carId, regNumber) {
+            if (!confirm(`Are you sure you want to delete car ${regNumber}?`)) {
+                return;
+            }
+
+            fetch(`/api/cars/${carId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                showAlert('Car deleted successfully!', 'success');
+                loadCars(); // Refresh the car list
+            })
+            .catch(error => {
+                console.error('Error deleting car:', error);
+                showAlert(error.message || 'Error deleting car. The car may have active bookings.', 'error');
+            });
+        }
+
+        function cancelBooking(bookingId) {
+            if (!confirm('Are you sure you want to cancel this booking?')) {
+                return;
+            }
+
+            fetch(`/api/bookings/${bookingId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to cancel booking');
+                }
+                showAlert('Booking cancelled successfully!', 'success');
+                loadBookings(); // Refresh the bookings list
+            })
+            .catch(error => {
+                console.error('Error cancelling booking:', error);
+                showAlert('Error cancelling booking', 'error');
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+
