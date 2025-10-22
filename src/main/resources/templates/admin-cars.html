@@ -294,7 +294,6 @@
     </div>
 
     <script>
-        // Load cars and bookings on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadCars();
             loadBookings();
@@ -334,7 +333,6 @@
 
             let url = '/api/bookings';
 
-            // Add date range parameters if both are provided
             if (startDate && endDate) {
                 const startDateTime = new Date(startDate).toISOString();
                 const endDateTime = new Date(endDate).toISOString();
@@ -489,7 +487,7 @@
             .then(data => {
                 showAlert('Car added successfully!', 'success');
                 document.getElementById('addCarForm').reset();
-                loadCars(); // Refresh the car list
+                loadCars();
             })
             .catch(error => {
                 console.error('Error adding car:', error);
@@ -510,7 +508,7 @@
                     return response.json().then(err => Promise.reject(err));
                 }
                 showAlert('Car deleted successfully!', 'success');
-                loadCars(); // Refresh the car list
+                loadCars();
             })
             .catch(error => {
                 console.error('Error deleting car:', error);
@@ -531,7 +529,7 @@
                     throw new Error('Failed to cancel booking');
                 }
                 showAlert('Booking cancelled successfully!', 'success');
-                loadBookings(); // Refresh the bookings list
+                loadBookings();
             })
             .catch(error => {
                 console.error('Error cancelling booking:', error);

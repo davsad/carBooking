@@ -168,8 +168,7 @@ class CarBookingIntegrationTest {
                 .content(objectMapper.writeValueAsString(request1)))
                 .andExpect(status().isCreated());
 
-        // Try to create conflicting booking
-        LocalDateTime conflictingDate = futureDate.plusDays(2); // Overlaps with first booking
+        LocalDateTime conflictingDate = futureDate.plusDays(2);
         BookingRequest request2 = new BookingRequest(testCar.getId(), conflictingDate, 3);
 
         mockMvc.perform(post("/api/bookings")
@@ -248,7 +247,6 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "integrationuser", authorities = {"ROLE_USER"})
     void testGetAllCarsWithBookingInfo() throws Exception {
-        // Create a booking
         Booking booking = new Booking();
         booking.setCar(testCar);
         booking.setUser(testUser);
@@ -270,7 +268,6 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "integrationuser", authorities = {"ROLE_USER"})
     void testUserCanDeleteOwnBooking() throws Exception {
-        // Create a booking
         Booking booking = new Booking();
         booking.setCar(testCar);
         booking.setUser(testUser);
@@ -279,7 +276,6 @@ class CarBookingIntegrationTest {
         booking.setCreatedAt(LocalDateTime.now());
         Booking savedBooking = bookingRepository.save(booking);
 
-        // User deletes their own booking
         mockMvc.perform(delete("/api/bookings/" + savedBooking.getId()))
                 .andExpect(status().isNoContent());
     }
@@ -287,13 +283,11 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "otheruser", authorities = {"ROLE_USER"})
     void testUserCannotDeleteOthersBooking() throws Exception {
-        // Create another user
         Role userRole = roleRepository.findByName("ROLE_USER").orElseThrow();
         User otherUser = new User("otheruser", "password", "other@test.com");
         otherUser.setRoles(Set.of(userRole));
         otherUser = userRepository.save(otherUser);
 
-        // Create a booking by integrationuser
         Booking booking = new Booking();
         booking.setCar(testCar);
         booking.setUser(testUser);
@@ -302,7 +296,6 @@ class CarBookingIntegrationTest {
         booking.setCreatedAt(LocalDateTime.now());
         Booking savedBooking = bookingRepository.save(booking);
 
-        // otheruser tries to delete integrationuser's booking
         mockMvc.perform(delete("/api/bookings/" + savedBooking.getId()))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value("You can only cancel your own bookings"));
@@ -311,7 +304,6 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "integrationuser", authorities = {"ROLE_USER"})
     void testBookingWorkflow() throws Exception {
-        // 1. Get available cars
         LocalDateTime futureDate = LocalDateTime.now().plusDays(30);
         String startDateStr = futureDate.toString();
 
@@ -321,7 +313,6 @@ class CarBookingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
 
-        // 2. Create a booking
         BookingRequest request = new BookingRequest(testCar.getId(), futureDate, 2);
 
         String bookingResponse = mockMvc.perform(post("/api/bookings")
@@ -333,7 +324,6 @@ class CarBookingIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        // 3. Verify car is no longer available for the same period
         mockMvc.perform(get("/api/cars")
                 .param("startDate", startDateStr)
                 .param("duration", "2"))
@@ -343,7 +333,6 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "admin", authorities = {"ROLE_ADMIN"})
     void testManualCleanupExpiredBookings() throws Exception {
-        // Create an expired booking
         Booking expiredBooking = new Booking();
         expiredBooking.setCar(testCar);
         expiredBooking.setUser(testUser);
@@ -352,7 +341,6 @@ class CarBookingIntegrationTest {
         expiredBooking.setCreatedAt(LocalDateTime.now().minusDays(10));
         bookingRepository.save(expiredBooking);
 
-        // Trigger manual cleanup
         mockMvc.perform(post("/api/bookings/cleanup-expired"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Cleanup completed successfully"))
@@ -369,7 +357,6 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "admin", authorities = {"ROLE_ADMIN"})
     void testManualCleanup_NoExpiredBookings() throws Exception {
-        // Create an active booking
         Booking activeBooking = new Booking();
         activeBooking.setCar(testCar);
         activeBooking.setUser(testUser);
@@ -378,7 +365,6 @@ class CarBookingIntegrationTest {
         activeBooking.setCreatedAt(LocalDateTime.now());
         bookingRepository.save(activeBooking);
 
-        // Trigger manual cleanup
         mockMvc.perform(post("/api/bookings/cleanup-expired"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Cleanup completed successfully"))
@@ -388,7 +374,6 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "integrationuser", authorities = {"ROLE_USER"})
     void testSearchCarsWithDateRange_NoConflicts() throws Exception {
-        // Search for cars in a future date range with no bookings
         LocalDateTime futureDate = LocalDateTime.now().plusDays(30);
         String startDateStr = futureDate.toString();
 
@@ -403,18 +388,16 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "integrationuser", authorities = {"ROLE_USER"})
     void testSearchCarsWithDateRange_WithConflicts() throws Exception {
-        // Create a booking for a specific date range
         LocalDateTime bookingStart = LocalDateTime.now().plusDays(10);
         Booking booking = new Booking();
         booking.setCar(testCar);
         booking.setUser(testUser);
         booking.setBookingDate(bookingStart);
-        booking.setDuration(5); // 10 days from now to 15 days from now
+        booking.setDuration(5);
         booking.setCreatedAt(LocalDateTime.now());
         bookingRepository.save(booking);
 
-        // Search for cars in an overlapping date range
-        LocalDateTime searchStart = LocalDateTime.now().plusDays(12); // Overlaps with booking
+        LocalDateTime searchStart = LocalDateTime.now().plusDays(12);
         String startDateStr = searchStart.toString();
 
         mockMvc.perform(get("/api/cars")
@@ -429,17 +412,15 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "integrationuser", authorities = {"ROLE_USER"})
     void testSearchCarsWithDateRange_NoOverlap() throws Exception {
-        // Create a booking for a specific date range
         LocalDateTime bookingStart = LocalDateTime.now().plusDays(10);
         Booking booking = new Booking();
         booking.setCar(testCar);
         booking.setUser(testUser);
         booking.setBookingDate(bookingStart);
-        booking.setDuration(3); // 10 days from now to 13 days from now
+        booking.setDuration(3);
         booking.setCreatedAt(LocalDateTime.now());
         bookingRepository.save(booking);
 
-        // Search for cars in a non-overlapping date range (after the booking)
         LocalDateTime searchStart = LocalDateTime.now().plusDays(20); // No overlap
         String startDateStr = searchStart.toString();
 
@@ -454,17 +435,15 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "integrationuser", authorities = {"ROLE_USER"})
     void testCreateBooking_OverlapDetection() throws Exception {
-        // Create an existing booking
         LocalDateTime existingBookingStart = LocalDateTime.now().plusDays(10);
         Booking existingBooking = new Booking();
         existingBooking.setCar(testCar);
         existingBooking.setUser(testUser);
         existingBooking.setBookingDate(existingBookingStart);
-        existingBooking.setDuration(5); // 10 to 15 days from now
+        existingBooking.setDuration(5);
         existingBooking.setCreatedAt(LocalDateTime.now());
         bookingRepository.save(existingBooking);
 
-        // Try to create an overlapping booking
         LocalDateTime newBookingStart = LocalDateTime.now().plusDays(12); // Overlaps
         BookingRequest request = new BookingRequest(testCar.getId(), newBookingStart, 2);
 
@@ -478,17 +457,15 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "integrationuser", authorities = {"ROLE_USER"})
     void testCreateBooking_NoOverlap() throws Exception {
-        // Create an existing booking
         LocalDateTime existingBookingStart = LocalDateTime.now().plusDays(10);
         Booking existingBooking = new Booking();
         existingBooking.setCar(testCar);
         existingBooking.setUser(testUser);
         existingBooking.setBookingDate(existingBookingStart);
-        existingBooking.setDuration(3); // 10 to 13 days from now
+        existingBooking.setDuration(3);
         existingBooking.setCreatedAt(LocalDateTime.now());
         bookingRepository.save(existingBooking);
 
-        // Try to create a non-overlapping booking (after existing booking)
         LocalDateTime newBookingStart = LocalDateTime.now().plusDays(20); // No overlap
         BookingRequest request = new BookingRequest(testCar.getId(), newBookingStart, 2);
 
@@ -502,7 +479,6 @@ class CarBookingIntegrationTest {
     @Test
     @WithMockUser(username = "integrationuser", authorities = {"ROLE_USER"})
     void testSearchCarsByType_WithDateRange() throws Exception {
-        // Search for SEDAN cars in a specific date range
         LocalDateTime futureDate = LocalDateTime.now().plusDays(25);
         String startDateStr = futureDate.toString();
 

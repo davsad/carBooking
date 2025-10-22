@@ -33,7 +33,6 @@ public class BookingController {
 
         List<BookingDTO> bookings;
 
-        // If date range is provided, filter bookings
         if (startDate != null && endDate != null) {
             bookings = bookingService.getBookingsByDateRange(startDate, endDate);
         } else {

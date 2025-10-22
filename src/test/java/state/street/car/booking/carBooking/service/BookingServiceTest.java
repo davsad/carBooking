@@ -243,7 +243,7 @@ class BookingServiceTest {
 
         Booking booking = new Booking();
         booking.setId(1L);
-        booking.setUser(testUser); // Booking belongs to testUser
+        booking.setUser(testUser);
 
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));

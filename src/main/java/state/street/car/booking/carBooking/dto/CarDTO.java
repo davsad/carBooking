@@ -17,7 +17,6 @@ public class CarDTO {
     private BigDecimal costPerDay;
     private Integer capacity;
 
-    // Booking information
     private Long currentBookingId;
     private Long bookedByUserId;
     private String bookedByUsername;
@@ -25,7 +24,6 @@ public class CarDTO {
     private String bookingEndDate;
     private Boolean isBooked;
 
-    // Constructor without booking info (for regular users)
     public CarDTO(Long id, String registrationNumber, CarType type, BigDecimal costPerDay, Integer capacity) {
         this.id = id;
         this.registrationNumber = registrationNumber;

@@ -361,17 +361,13 @@
         let allCars = [];
         let currentUser = null;
 
-        // Load cars on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Load user info and store in localStorage
             loadUserInfo().then(() => {
-                // Set default start date to today
                 const today = new Date();
                 today.setHours(10, 0, 0, 0);
                 document.getElementById('startDate').value = formatDateTimeLocal(today);
                 document.getElementById('bookingDate').value = formatDateTimeLocal(today);
 
-                // Load cars with default date and duration
                 loadCars();
             });
         });
@@ -420,7 +416,7 @@
         }
 
         function loadCars() {
-            filterCars(); // Use filterCars to load with date parameters
+            filterCars();
         }
 
         function filterCars() {
@@ -428,13 +424,11 @@
             const startDate = document.getElementById('startDate').value;
             const duration = document.getElementById('duration').value;
 
-            // Validate required fields
             if (!startDate || !duration) {
                 showAlert('Please select start date and duration', 'error');
                 return;
             }
 
-            // Convert datetime-local to ISO format for API
             const startDateTime = new Date(startDate).toISOString();
 
             let url = `/api/cars?startDate=${encodeURIComponent(startDateTime)}&duration=${duration}`;
@@ -469,7 +463,6 @@
                 let bookingInfo = '';
 
                 if (car.isBooked) {
-                    // Car is booked - show booking info
                     const isMyBooking = currentUser && car.bookedByUserId === userId;
                     const canCancel = isMyBooking || isAdmin();
 
@@ -489,7 +482,6 @@
                         `;
                     }
                 } else {
-                    // Available car - show book button
                     buttonHtml = `
                         <button class="book-btn" onclick="openBookingModal(${car.id}, '${car.registrationNumber}', '${car.type}')">
                             Book Now
@@ -518,13 +510,11 @@
             document.getElementById('bookingCarId').value = carId;
             document.getElementById('bookingCarInfo').textContent = `${regNumber} (${type})`;
 
-            // Set booking date from filter if available
             const filterDate = document.getElementById('startDate').value;
             if (filterDate) {
                 document.getElementById('bookingDate').value = filterDate;
             }
 
-            // Set duration from filter if available
             const filterDuration = document.getElementById('duration').value;
             if (filterDuration) {
                 document.getElementById('bookingDuration').value = filterDuration;
@@ -566,7 +556,7 @@
             .then(data => {
                 showAlert('Booking created successfully!', 'success');
                 closeModal();
-                loadCars(); // Refresh the car list
+                loadCars();
             })
             .catch(error => {
                 console.error('Error creating booking:', error);
@@ -610,7 +600,6 @@
             }, 5000);
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById('bookingModal');
             if (event.target == modal) {

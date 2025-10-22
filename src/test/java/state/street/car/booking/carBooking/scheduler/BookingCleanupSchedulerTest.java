@@ -51,13 +51,12 @@ class BookingCleanupSchedulerTest {
 
     @Test
     void testCleanupExpiredBookings_WithExpiredBookings() {
-        // Create an expired booking (ended 2 days ago)
         Booking expiredBooking = new Booking();
         expiredBooking.setId(1L);
         expiredBooking.setCar(testCar);
         expiredBooking.setUser(testUser);
         expiredBooking.setBookingDate(LocalDateTime.now().minusDays(5));
-        expiredBooking.setDuration(2); // Ended 3 days ago
+        expiredBooking.setDuration(2);
         expiredBooking.setCreatedAt(LocalDateTime.now().minusDays(5));
 
         when(bookingRepository.findAll()).thenReturn(Collections.singletonList(expiredBooking));
@@ -69,13 +68,12 @@ class BookingCleanupSchedulerTest {
 
     @Test
     void testCleanupExpiredBookings_WithActiveBookings() {
-        // Create an active booking (ends tomorrow)
         Booking activeBooking = new Booking();
         activeBooking.setId(1L);
         activeBooking.setCar(testCar);
         activeBooking.setUser(testUser);
         activeBooking.setBookingDate(LocalDateTime.now());
-        activeBooking.setDuration(2); // Ends tomorrow
+        activeBooking.setDuration(2);
         activeBooking.setCreatedAt(LocalDateTime.now());
 
         when(bookingRepository.findAll()).thenReturn(Collections.singletonList(activeBooking));
@@ -87,7 +85,6 @@ class BookingCleanupSchedulerTest {
 
     @Test
     void testCleanupExpiredBookings_WithMixedBookings() {
-        // Create an expired booking
         Booking expiredBooking = new Booking();
         expiredBooking.setId(1L);
         expiredBooking.setCar(testCar);
@@ -96,13 +93,12 @@ class BookingCleanupSchedulerTest {
         expiredBooking.setDuration(3); // Ended 7 days ago
         expiredBooking.setCreatedAt(LocalDateTime.now().minusDays(10));
 
-        // Create an active booking
         Booking activeBooking = new Booking();
         activeBooking.setId(2L);
         activeBooking.setCar(testCar);
         activeBooking.setUser(testUser);
         activeBooking.setBookingDate(LocalDateTime.now());
-        activeBooking.setDuration(5); // Ends in 5 days
+        activeBooking.setDuration(5);
         activeBooking.setCreatedAt(LocalDateTime.now());
 
         when(bookingRepository.findAll()).thenReturn(Arrays.asList(expiredBooking, activeBooking));
@@ -124,7 +120,6 @@ class BookingCleanupSchedulerTest {
 
     @Test
     void testManualCleanup_ReturnsCorrectCount() {
-        // Create two expired bookings
         Booking expiredBooking1 = new Booking();
         expiredBooking1.setId(1L);
         expiredBooking1.setCar(testCar);
@@ -151,7 +146,6 @@ class BookingCleanupSchedulerTest {
 
     @Test
     void testManualCleanup_WithNoExpiredBookings() {
-        // Create an active booking
         Booking activeBooking = new Booking();
         activeBooking.setId(1L);
         activeBooking.setCar(testCar);
@@ -170,20 +164,18 @@ class BookingCleanupSchedulerTest {
 
     @Test
     void testCleanupExpiredBookings_BookingEndingYesterday() {
-        // Create a booking that ended yesterday
         Booking bookingEndedYesterday = new Booking();
         bookingEndedYesterday.setId(1L);
         bookingEndedYesterday.setCar(testCar);
         bookingEndedYesterday.setUser(testUser);
         bookingEndedYesterday.setBookingDate(LocalDateTime.now().minusDays(2));
-        bookingEndedYesterday.setDuration(1); // Ended yesterday
+        bookingEndedYesterday.setDuration(1);
         bookingEndedYesterday.setCreatedAt(LocalDateTime.now().minusDays(2));
 
         when(bookingRepository.findAll()).thenReturn(Collections.singletonList(bookingEndedYesterday));
 
         cleanupScheduler.cleanupExpiredBookings();
 
-        // Should be deleted since it ended yesterday
         verify(bookingRepository, times(1)).delete(bookingEndedYesterday);
     }
 }

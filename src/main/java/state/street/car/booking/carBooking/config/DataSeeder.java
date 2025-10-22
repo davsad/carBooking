@@ -26,14 +26,12 @@ public class DataSeeder implements CommandLineRunner {
     
     @Override
     public void run(String... args) throws Exception {
-        // Create Roles
         Role adminRole = new Role("ROLE_ADMIN");
         Role userRole = new Role("ROLE_USER");
         
         roleRepository.save(adminRole);
         roleRepository.save(userRole);
-        
-        // Create Users
+
         User admin = new User("admin", passwordEncoder.encode("admin123"), "admin@carbooking.com");
         admin.setRoles(Set.of(adminRole));
         userRepository.save(admin);
@@ -49,18 +47,15 @@ public class DataSeeder implements CommandLineRunner {
         User adminUser = new User("manager", passwordEncoder.encode("manager123"), "manager@carbooking.com");
         adminUser.setRoles(Set.of(adminRole, userRole));
         userRepository.save(adminUser);
-        
-        // Create Cars - 3 Sedans
+
         carRepository.save(new Car("SED-001", CarType.SEDAN, new BigDecimal("50.00"), 4));
         carRepository.save(new Car("SED-002", CarType.SEDAN, new BigDecimal("55.00"), 5));
         carRepository.save(new Car("SED-003", CarType.SEDAN, new BigDecimal("60.00"), 5));
-        
-        // Create Cars - 3 Vans
+
         carRepository.save(new Car("VAN-001", CarType.VAN, new BigDecimal("80.00"), 8));
         carRepository.save(new Car("VAN-002", CarType.VAN, new BigDecimal("85.00"), 9));
         carRepository.save(new Car("VAN-003", CarType.VAN, new BigDecimal("90.00"), 10));
-        
-        // Create Cars - 10 SUVs
+
         carRepository.save(new Car("SUV-001", CarType.SUV, new BigDecimal("70.00"), 5));
         carRepository.save(new Car("SUV-002", CarType.SUV, new BigDecimal("72.00"), 5));
         carRepository.save(new Car("SUV-003", CarType.SUV, new BigDecimal("75.00"), 6));
